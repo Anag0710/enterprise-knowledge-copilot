@@ -54,9 +54,26 @@ def initialize_agent(
     vector_cache_dir: Path = Path("data/processed_chunks/vector_store"),
     log_path: Optional[Path] = Path("data/logs/agent_runs.jsonl"),
     enable_metrics: bool = False,
+    enable_advanced_retrieval: bool = True,  # New parameter
 ) -> EnterpriseKnowledgeAgent:
     store = build_vector_store(raw_docs_dir, vector_cache_dir)
-    retrieval_engine = RetrievalEngine(store)
+    
+    # Create retrieval engine with advanced features
+    retrieval_engine = RetrievalEngine(
+        store,
+        enable_reranking=enable_advanced_retrieval,
+        enable_hybrid_search=enable_advanced_retrieval,
+        enable_query_reformulation=enable_advanced_retrieval
+    )
+    
+    # Build BM25 index for hybrid search if enabled
+    if enable_advanced_retrieval and retrieval_engine.hybrid_search:
+        try:
+            retrieval_engine.index_for_hybrid_search(store.documents)
+            logger.info("BM25 index built for hybrid search")
+        except Exception as e:
+            logger.warning(f"Failed to build BM25 index: {e}")
+    
     retrieval_tool = RetrievalTool(retrieval_engine)
     llm_client = llm_client or _maybe_initialize_llm_client()
     answer_tool = AnswerGenerationTool(llm_client=llm_client)
@@ -104,13 +121,17 @@ def _maybe_initialize_llm_client() -> Optional[OpenAIChatClient]:
 
 
 def _build_manifest(raw_docs_dir: Path) -> dict:
+    """Build manifest for all supported document formats."""
     manifest = {"documents": []}
-    for pdf_path in sorted(raw_docs_dir.glob("*.pdf")):
-        fingerprint = VectorStore.fingerprint_file(pdf_path)
-        manifest["documents"].append({
-            "path": str(pdf_path.name),
-            "fingerprint": fingerprint,
-        })
+    supported_extensions = ['*.pdf', '*.docx', '*.xlsx', '*.txt', '*.md', '*.html']
+    
+    for pattern in supported_extensions:
+        for doc_path in sorted(raw_docs_dir.glob(pattern)):
+            fingerprint = VectorStore.fingerprint_file(doc_path)
+            manifest["documents"].append({
+                "path": str(doc_path.name),
+                "fingerprint": fingerprint,
+            })
     return manifest
 
 
