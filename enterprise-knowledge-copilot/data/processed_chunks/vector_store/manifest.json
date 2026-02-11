@@ -1,0 +1,41 @@
+{
+  "built_at": "2026-02-11T04:39:58.236276+00:00",
+  "documents": [
+    {
+      "path": "example1.pdf",
+      "fingerprint": "f8d3b268a145e19c1902a37c10a4fc27c302df3014255749817fcdc4cabaf041"
+    },
+    {
+      "path": "example10.pdf",
+      "fingerprint": "926c2c8f94f910ddeae13a0558ca6c13e1675a9ac5b2488a0d5167923646532b"
+    },
+    {
+      "path": "example11.pdf",
+      "fingerprint": "40a5b70feb08081fd9ccfb4e5b1e8ac02ccf5f68df9dabc46256527164f0185b"
+    },
+    {
+      "path": "example2.pdf",
+      "fingerprint": "51e312ddf884357b1c8b9ce7587e0549bf5f93f41480ec732704f5ca1b616a21"
+    },
+    {
+      "path": "example3.pdf",
+      "fingerprint": "261669379a3131633e9727fb0b6e99cf16c036d12ce981745c909f1b05d4944f"
+    },
+    {
+      "path": "example4.pdf",
+      "fingerprint": "6d7fb08ed1c8e7880161861f017dad25d721e5f8f6136f7081f1a1b069849160"
+    },
+    {
+      "path": "example5.pdf",
+      "fingerprint": "a81650d0bd31773979ffb93b3cb601c5bca0422fd69a2206df52eea451912cbd"
+    },
+    {
+      "path": "example8.pdf",
+      "fingerprint": "51e312ddf884357b1c8b9ce7587e0549bf5f93f41480ec732704f5ca1b616a21"
+    },
+    {
+      "path": "example9.pdf",
+      "fingerprint": "6d7fb08ed1c8e7880161861f017dad25d721e5f8f6136f7081f1a1b069849160"
+    }
+  ]
+}

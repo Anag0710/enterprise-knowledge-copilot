@@ -1,0 +1,59 @@
+
+[
+	{
+		"question": "What is the official paid time off policy?",
+		"expected_behavior": "answer",
+		"expected_sources": ["EmployeeHandbook.pdf"]
+	},
+	{
+        "question": "How many vacation days do employees get?",
+        "expected_behavior": "answer",
+        "expected_sources": ["EmployeeHandbook.pdf"]
+    },
+    {
+        "question": "What is the EOS REBEL T3/1100D?",
+        "expected_behavior": "answer",
+        "expected_sources": ["example2.pdf", "example8.pdf"]
+    },
+    {
+        "question": "What megapixels does the camera have?",
+        "expected_behavior": "answer",
+        "expected_sources": ["example2.pdf", "example8.pdf"]
+    },
+    {
+        "question": "Can you explain how this works?",
+        "expected_behavior": "clarify",
+        "expected_sources": []
+    },
+    {
+        "question": "Tell me about it",
+        "expected_behavior": "clarify",
+        "expected_sources": []
+    },
+    {
+        "question": "What policy?",
+        "expected_behavior": "clarify",
+        "expected_sources": []
+    },
+    {
+        "question": "Info",
+        "expected_behavior": "clarify",
+        "expected_sources": []
+    },
+    {
+        "question": "What are our cafeteria menu options today?",
+        "expected_behavior": "refuse",
+        "expected_sources": []
+    },
+    {
+        "question": "Who won the 2024 Super Bowl?",
+        "expected_behavior": "refuse",
+        "expected_sources": []
+    },
+    {
+        "question": "What is the weather forecast for tomorrow?",
+        "expected_behavior": "refuse",
+        "expected_sources": []
+    },
+    {
+        "question": "How do I write Python code?",
