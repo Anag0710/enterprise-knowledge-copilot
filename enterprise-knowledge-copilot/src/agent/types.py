@@ -12,6 +12,7 @@ class AgentDecision(Enum):
     CLARIFY = "clarify"
     ANSWER = "answer"
     REFUSE = "refuse"
+    TRANSFORM = "transform"
 
 
 @dataclass
@@ -44,6 +45,7 @@ class AgentResponse:
     status: str
     steps: List[AgentStep] = field(default_factory=list)
     retrieved_chunks: Optional[List[RetrievedChunk]] = None
+    language: Optional[str] = None
 
     def requires_clarification(self) -> bool:
         return self.status == "clarification_needed"

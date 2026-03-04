@@ -1,9 +1,9 @@
 # Planning Notes
 
 ## Near-term backlog
-- Add streaming clarifications by capturing follow-up answers and feeding them back into the agent.
-- Wire the evaluation suite into CI with answer-key scoring for critical policies.
-- Ship audit logs (JSONL) to the enterprise logging stack with rotation + retention policies.
+- Build admin dashboard for experiment summaries (variant win rates, traffic splits, guardrail metrics).
+- Surface multilingual usage stats (per-language volumes, refusal rates) in Prometheus/Grafana.
+- Add configurable PII redaction modes to `/export` so compliance can pick mask/hash/remove per channel.
 
 ## Agent reasoning flow
 1. **Question intake**: `AgentPolicy.entrypoint_decision()` checks length, pronouns, and ambiguous keywords; may dispatch clarification immediately.

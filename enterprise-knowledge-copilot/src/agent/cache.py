@@ -124,9 +124,10 @@ class ResponseCache:
         # Convert to dict
         data = {
             "answer": response.answer,
-            "sources": [asdict(s) for s in response.sources],
+            "sources": response.sources,
             "confidence": response.confidence,
             "status": response.status,
+            "language": response.language,
             "steps": [
                 {
                     "decision": step.decision.value if hasattr(step.decision, 'value') else step.decision,
@@ -142,20 +143,20 @@ class ResponseCache:
                 } for step in response.steps
             ],
             "retrieved_chunks": [asdict(chunk) for chunk in response.retrieved_chunks]
-        }
-        return json.dumps(data)
+            ],
+            "retrieved_chunks": [asdict(chunk) for chunk in (response.retrieved_chunks or [])]
     
     def _deserialize_response(self, serialized: str) -> AgentResponse:
         """Deserialize JSON string back to AgentResponse."""
         from src.agent.types import AgentDecision, AgentStep, ToolCallLog, SourceInfo
-        from src.retrieval.types import RetrievedChunk
+        from src.agent.types import AgentDecision, AgentStep, ToolCallLog
         
         data = json.loads(serialized)
         
         # Reconstruct AgentResponse
         return AgentResponse(
             answer=data["answer"],
-            sources=[SourceInfo(**s) for s in data["sources"]],
+            sources=data["sources"],
             confidence=data["confidence"],
             status=data["status"],
             steps=[
@@ -165,7 +166,8 @@ class ResponseCache:
                     tool_calls=[ToolCallLog(**tc) for tc in step_data["tool_calls"]]
                 ) for step_data in data["steps"]
             ],
-            retrieved_chunks=[RetrievedChunk(**chunk) for chunk in data["retrieved_chunks"]]
+            retrieved_chunks=[RetrievedChunk(**chunk) for chunk in data.get("retrieved_chunks", [])],
+            language=data.get("language")
         )
     
     def clear(self):

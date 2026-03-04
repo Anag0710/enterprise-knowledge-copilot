@@ -12,6 +12,7 @@ from src.agent import (
     OpenAIChatClient,
     RetrievalTool,
 )
+from src.agent.config import AgentRuntimeConfig
 from src.embeddings.vector_store import VectorStore
 from src.ingestion.chunker import chunk_text
 from src.ingestion.loader import load_documents_from_directory
@@ -21,7 +22,7 @@ from src.retrieval.engine import RetrievalEngine
 logger = logging.getLogger(__name__)
 
 
-def build_vector_store(raw_docs_dir: Path, cache_dir: Path) -> VectorStore:
+def build_vector_store(raw_docs_dir: Path, cache_dir: Path, language_detector=None) -> VectorStore:
     store = VectorStore()
     manifest = _build_manifest(raw_docs_dir)
 
@@ -39,6 +40,10 @@ def build_vector_store(raw_docs_dir: Path, cache_dir: Path) -> VectorStore:
         )
 
     chunks = chunk_text(documents)
+    if language_detector:
+        for chunk in chunks:
+            chunk_language = language_detector.normalize(language_detector.detect(chunk["text"]))
+            chunk["metadata"]["language"] = chunk_language
     store.build_index(chunks)
 
     if cache_dir:
@@ -54,20 +59,57 @@ def initialize_agent(
     vector_cache_dir: Path = Path("data/processed_chunks/vector_store"),
     log_path: Optional[Path] = Path("data/logs/agent_runs.jsonl"),
     enable_metrics: bool = False,
-    enable_advanced_retrieval: bool = True,  # New parameter
+    enable_advanced_retrieval: bool = True,
+    *,
+    store: Optional[VectorStore] = None,
+    agent_config: Optional[AgentRuntimeConfig] = None,
+    run_logger: Optional[AgentRunLogger] = None,
+    metrics: Optional[AgentMetrics] = None,
 ) -> EnterpriseKnowledgeAgent:
-    store = build_vector_store(raw_docs_dir, vector_cache_dir)
+    config = agent_config or AgentRuntimeConfig(
+        enable_advanced_retrieval=enable_advanced_retrieval
+    )
+
+    env_multilingual = os.getenv("EKC_MULTILINGUAL")
+    if env_multilingual:
+        config.multilingual.enabled = env_multilingual.lower() not in {"0", "false", "no"}
+
+    runtime_language_detector = None
+    translator = None
+    ingestion_language_detector = None
+
+    if config.multilingual.enabled:
+        try:
+            from src.multilingual.language_detector import LanguageDetector
+            from src.multilingual.translator import Translator
+
+            runtime_language_detector = LanguageDetector(config.multilingual.default_language)
+            translator = Translator(
+                default_target=config.multilingual.default_language,
+                provider=config.multilingual.translation_provider
+            )
+            ingestion_language_detector = runtime_language_detector
+        except ImportError as exc:
+            logger.warning("Multilingual mode disabled (missing dependency): %s", exc)
+            config.multilingual.enabled = False
+
+    if store is None:
+        store = build_vector_store(
+            raw_docs_dir,
+            vector_cache_dir,
+            language_detector=ingestion_language_detector
+        )
     
     # Create retrieval engine with advanced features
     retrieval_engine = RetrievalEngine(
         store,
-        enable_reranking=enable_advanced_retrieval,
-        enable_hybrid_search=enable_advanced_retrieval,
-        enable_query_reformulation=enable_advanced_retrieval
+        enable_reranking=config.enable_advanced_retrieval,
+        enable_hybrid_search=config.enable_advanced_retrieval,
+        enable_query_reformulation=config.enable_advanced_retrieval
     )
     
     # Build BM25 index for hybrid search if enabled
-    if enable_advanced_retrieval and retrieval_engine.hybrid_search:
+    if config.enable_advanced_retrieval and retrieval_engine.hybrid_search:
         try:
             retrieval_engine.index_for_hybrid_search(store.documents)
             logger.info("BM25 index built for hybrid search")
@@ -78,8 +120,8 @@ def initialize_agent(
     llm_client = llm_client or _maybe_initialize_llm_client()
     answer_tool = AnswerGenerationTool(llm_client=llm_client)
     clarification_tool = ClarificationTool()
-    run_logger = AgentRunLogger(log_path) if log_path else None
-    metrics = AgentMetrics() if enable_metrics else None
+    run_logger = run_logger or (AgentRunLogger(log_path) if log_path else None)
+    metrics = metrics or (AgentMetrics() if enable_metrics else None)
 
     # Create policy with semantic similarity support
     from src.agent.policy import AgentPolicy
@@ -95,6 +137,11 @@ def initialize_agent(
         policy=policy,
         run_logger=run_logger,
         metrics=metrics,
+        enable_specialized_tools=config.enable_specialized_tools,
+        retrieval_confidence_threshold=config.retrieval_confidence_threshold,
+        language_detector=runtime_language_detector,
+        translator=translator,
+        default_language=config.multilingual.default_language,
     )
 
 

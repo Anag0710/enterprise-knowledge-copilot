@@ -332,7 +332,8 @@ Server-Sent Events (SSE) for real-time answer streaming.
 1. `start` - Processing begins
 2. `token` - Each word of answer (simulated)
 3. `complete` - Final metadata (confidence, sources)
-4. `error` - If processing fails
+4. `clarification` - Fired when more detail is required (contains `clarification_id`, prompt, language)
+5. `error` - If processing fails
 
 **Usage:**
 ```javascript
@@ -357,6 +358,8 @@ eventSource.addEventListener('complete', (event) => {
 
 **New Endpoints:**
 - `POST /ask/stream` - Streaming responses via SSE
+- `POST /clarify/{id}` - Submit clarification follow-ups
+- `POST /clarify/{id}/stream` - Streaming clarification responses
 - `POST /feedback` - Submit user feedback
 - `GET /feedback/stats` - Feedback statistics
 - `GET /suggestions` - Get suggested questions

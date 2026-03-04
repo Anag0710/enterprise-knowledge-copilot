@@ -74,7 +74,9 @@ python -m uvicorn src.api:app --reload
 - **Suggestions**: `GET /suggestions` - Smart question recommendations
 - **Export**: `POST /export` - Download conversations as JSON/PDF/Text
 - **Caching**: `GET /cache/stats` - View cache performance
+- **Clarifications**: `POST /clarify/{id}` / `/clarify/{id}/stream` - Continue clarification loops across CLI, REST, and UI
 - **Rate Limiting**: All endpoints protected (30-100 req/min)
+- **A/B Experiments**: Opt in via `x-experiment-name` + `x-user-id` headers to compare retrieval variants
 
 **Docs**: `http://localhost:8000/docs`
 
@@ -87,6 +89,12 @@ python -m uvicorn src.api:app --reload
 - Prometheus metrics exposed at `/metrics` endpoint
 - Track request durations, confidence scores, decision types, cache hits/misses
 - Visualize with Grafana or any Prometheus-compatible tool
+- Ready-made dashboard + alert rules live in [docs/observability.md](docs/observability.md)
+
+### Experiments & Multilingual Mode
+- Define variants in [evaluation/experiments.json](evaluation/experiments.json) and opt into tests with `x-experiment-name` + `x-user-id` headers.
+- Responses echo `experiment`/`variant`; variant caches stay isolated from the global cache.
+- Multilingual mode auto-detects + translates questions; set `EKC_MULTILINGUAL=false` if you want to disable it or skip installing optional dependencies.
 
 ## Evaluation workflow
 - Expanded test suite with 12+ cases covering:

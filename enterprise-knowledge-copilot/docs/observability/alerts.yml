@@ -1,0 +1,27 @@
+groups:
+  - name: enterprise-knowledge-copilot
+    rules:
+      - alert: HighAgentLatency
+        expr: rate(agent_request_duration_seconds_sum[5m]) / rate(agent_request_duration_seconds_count[5m]) > 4
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Agent latency above 4s"
+          description: "Average request latency has exceeded 4 seconds for the past 5 minutes."
+      - alert: ConfidenceDrop
+        expr: histogram_quantile(0.5, rate(agent_retrieval_confidence_bucket[5m])) < 0.4
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Retrieval confidence below 0.4"
+          description: "Median retrieval confidence dropped below 0.4."
+      - alert: ClarificationSpike
+        expr: increase(agent_decisions_total{decision="clarify"}[15m]) > 50
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Clarifications spiking"
+          description: "More than 50 clarification decisions were made in the last 15 minutes."

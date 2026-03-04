@@ -30,3 +30,9 @@
    - Production-ready HTTP interface with async support, automatic OpenAPI docs, health checks, and Prometheus integration.
 15. **Standalone web UI**
    - Single-file HTML/JS interface demonstrates the API without requiring framework dependencies; chat UI with real-time status indicators.
+16. **Multilingual normalization before retrieval**
+   - Questions/history are auto-detected and translated into English so the same policy/routing logic works globally; answers/refusals are localized back to the detected language.
+17. **Pluggable experiment harness**
+   - `evaluation/experiments.json` describes variants that are instantiated on-demand, letting us test retrieval/policy tweaks without branching deployments.
+18. **Async log shipper**
+   - Audit logs stream to an HTTP endpoint via a bounded buffer + retries so SOC teams ingest data in near real time without blocking the request path.

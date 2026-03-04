@@ -5,14 +5,14 @@ from src.agent.types import AgentDecision
 
 
 def _normalize(text: str) -> str:
-	return text.lower().strip()
+    return text.lower().strip()
 
 
 class AgentPolicy:
-	"""Rule-based guardrails for the agent's high-level choices."""
+    """Rule-based guardrails for the agent's high-level choices."""
 
-	PRONOUN_PATTERN = re.compile(r"\b(it|they|them|this|that|those|these)\b", re.IGNORECASE)
-	AMBIGUOUS_KEYWORDS = {"policy", "process", "procedure", "document", "info", "details"}
+    PRONOUN_PATTERN = re.compile(r"\b(it|they|them|this|that|those|these)\b", re.IGNORECASE)
+    AMBIGUOUS_KEYWORDS = {"policy", "process", "procedure", "document", "info", "details"}
     VAGUE_QUESTIONS = [
         "tell me more",
         "explain",
@@ -73,6 +73,17 @@ class AgentPolicy:
             return AgentDecision.CLARIFY
 
         return AgentDecision.RETRIEVE
+
+    def should_refuse(self, retrieval_confidence: float, threshold: float) -> bool:
+        """Decide whether to refuse answering based on retrieval confidence."""
+        return retrieval_confidence < threshold
+
+    def refusal_message(self) -> str:
+        """Provide a consistent refusal response for low-confidence retrievals."""
+        return (
+            "I could not find enough grounded context in the indexed documents to answer. "
+            "Please rephrase the question or add more detail."
+        )
 
     def _pronoun_without_history(self, question: str, history: List[str]) -> bool:
         return not history and bool(self.PRONOUN_PATTERN.search(question))

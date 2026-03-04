@@ -1,0 +1,31 @@
+[
+  {
+    "name": "advanced-vs-basic",
+    "description": "Compare advanced retrieval stack against pure dense retrieval",
+    "traffic_split": 0.5,
+    "metrics": ["confidence", "latency_seconds", "clarification_rate"],
+    "variant_a": {
+      "label": "advanced_on",
+      "config": {
+        "enable_advanced_retrieval": true,
+        "enable_specialized_tools": true,
+        "retrieval_confidence_threshold": 0.35,
+        "multilingual": {
+          "enabled": true,
+          "default_language": "en"
+        }
+      }
+    },
+    "variant_b": {
+      "label": "advanced_off",
+      "config": {
+        "enable_advanced_retrieval": false,
+        "enable_specialized_tools": false,
+        "retrieval_confidence_threshold": 0.45,
+        "multilingual": {
+          "enabled": false
+        }
+      }
+    }
+  }
+]

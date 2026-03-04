@@ -1,13 +1,13 @@
 # Additional Features Implementation Summary
 
-**Date:** December 2024  
-**Status:** 6 of 8 remaining features implemented
+**Date:** March 2026  
+**Status:** 8 of 8 roadmap features implemented
 
 This document tracks the implementation of additional enhancements beyond the initial 11 production features.
 
 ---
 
-## ✅ Implemented Features (6)
+## ✅ Implemented Features (8)
 
 ### 1. Document Versioning System
 **Status:** ✅ Complete  
@@ -282,85 +282,38 @@ data/media/
 
 All authentication endpoints have been added to the API with proper token handling and role-based access control.
 
----
+### 7. A/B Testing Framework
+**Status:** ✅ Complete  
+**Location:** `src/evaluation/ab_testing.py`, `evaluation/experiments.json`
 
-## ⏸️ Not Yet Implemented (2)
+**Highlights:**
+- Deterministic variant assignment via SHA256 hashing
+- Pluggable `AgentRuntimeConfig` per variant (toggle reranking, tools, thresholds)
+- Metrics captured automatically (latency, confidence, clarification rate)
+- API opt-in via headers: `x-experiment-name` + `x-user-id`
+- Variant-scoped caches so active experiments never poison the primary cache
 
-### 1. A/B Testing Framework
-**Priority:** Low  
-**Complexity:** Medium  
-**Estimated Effort:** 2-3 hours
+**Usage:**
+1. Edit `evaluation/experiments.json` to define variants and traffic split.
+2. Send API requests with `x-experiment-name: advanced-vs-basic` and a stable `x-user-id`.
+3. Query `_ab_manager.summarize()` in a REPL to compare metrics or stream them into dashboards.
 
-**What It Would Do:**
-- Run controlled experiments comparing different system configurations
-- Split traffic between variant A and B
-- Track metrics per variant (confidence, latency, user ratings)
-- Statistical significance testing
+### 8. Multilingual Question Handling
+**Status:** ✅ Complete  
+**Location:** `src/multilingual/*`, `src/agent/controller.py`, `src/main.py`
 
-**Proposed Design:**
-```python
-# src/evaluation/ab_testing.py
-class Experiment:
-    name: str
-    variant_a_config: dict
-    variant_b_config: dict
-    traffic_split: float  # 0.5 = 50/50
-    metrics: Dict[str, list]
-
-class ABTestManager:
-    def create_experiment(name, config_a, config_b) -> Experiment
-    def assign_variant(user_id) -> str  # "A" or "B"
-    def track_metric(experiment, variant, metric_name, value)
-    def get_results(experiment) -> dict  # p-value, confidence intervals
-```
-
-**Use Cases:**
-- Test new reranking models
-- Compare different retrieval strategies
-- Evaluate prompt engineering changes
-- Measure impact of caching
+**Highlights:**
+- `LanguageDetector` (langdetect) annotates chunks during ingestion and detects question language at runtime.
+- `Translator` (deep-translator / Google) normalizes questions + history into English before policy/retrieval.
+- Answers, refusals, and clarification prompts are translated back to the user's language; API responses expose `language` metadata.
+- Feature flag controlled via `AgentRuntimeConfig.multilingual` (default on) with graceful fallback if dependencies are missing.
 
 ---
 
-### 2. Multi-Language Support
-**Priority:** Medium  
-**Complexity:** High  
-**Estimated Effort:** 4-6 hours
-
-**What It Would Do:**
-- Detect document/query language automatically
-- Use language-specific embedding models
-- Translate queries/answers when needed
-- Support multilingual vector stores
-
-**Proposed Design:**
-```python
-# src/multilingual/language_detector.py
-class LanguageDetector:
-    def detect(text) -> str  # ISO 639-1 code (en, es, fr, etc.)
-
-# src/multilingual/translator.py
-class Translator:
-    def translate(text, source_lang, target_lang) -> str
-
-# src/embeddings/multilingual_store.py
-class MultilingualVectorStore:
-    stores: Dict[str, VectorStore]  # lang_code -> store
-    def index_document(text, lang)
-    def retrieve(query, lang) -> List[Chunk]
-```
-
-**Dependencies:**
-- `langdetect` or `fasttext` for language detection
-- `googletrans` or `deep-translator` for translation
-- Multilingual embedding models: `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`
-
-**Challenges:**
-- Separate vector store per language OR single multilingual model
-- Translation quality/cost
-- Mixed-language documents
-
----
+## 🔭 Backlog / Future Ideas
+- Multi-tenant rate limiting keyed by user/org
+- Document-level diffing to accelerate incremental ingestion
+- Native streaming from OpenAI/Anthropic clients (replace simulated SSE)
 
 ## 📊 Summary
 

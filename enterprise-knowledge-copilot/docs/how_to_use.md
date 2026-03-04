@@ -128,7 +128,9 @@ curl -X POST "http://localhost:8000/ask" `
     {"source": "Policy.pdf", "page": 5, "chunk": 2}
   ],
   "confidence": 0.85,
-  "status": "answered"
+  "status": "answered",
+  "language": "en",
+  "clarification_id": null
 }
 ```
 
@@ -136,6 +138,13 @@ curl -X POST "http://localhost:8000/ask" `
 - `answered` - Successfully answered with context
 - `clarification_needed` - Question needs more detail
 - `no_context` - No sufficient context found
+- `error` - Specialized tool failed (e.g., calculator input invalid)
+
+#### Clarification Workflow
+1. When the agent needs more detail you will get `status="clarification_needed"` plus a `clarification_id` and localized prompt.
+2. Send your follow-up text to `POST /clarify/{clarification_id}` (JSON: `{ "detail": "More info..." }`).
+3. For streaming UX call `POST /clarify/{clarification_id}/stream` and listen for `clarification`, `token`, and `complete` SSE events.
+4. Every clarification retains the conversation history that triggered it, so you never lose context between CLI, REST, and the web UI.
 
 #### 2. Health Check
 ```powershell
@@ -395,7 +404,33 @@ $env:LOG_LEVEL = "INFO"                  # DEBUG, INFO, WARNING, ERROR
 # API Configuration
 $env:API_HOST = "0.0.0.0"
 $env:API_PORT = "8000"
+
+# Optional: Log shipping + retention
+$env:LOG_SHIPPER_ENDPOINT = "https://logs.example.com/ingest"
+$env:LOG_SHIPPER_API_KEY = "token-here"
+$env:LOG_SHIPPER_BATCH = "100"
+$env:AGENT_LOG_MAX_BYTES = "8000000"
+$env:AGENT_LOG_BACKUPS = "7"
+
+# Toggle multilingual support (on by default)
+$env:EKC_MULTILINGUAL = "false"
 ```
+
+## Experiments & Multilingual Mode
+
+### A/B Experiments
+1. Define variants in `evaluation/experiments.json` (sample `advanced-vs-basic` included).
+2. Call `/ask` or `/ask/stream` with headers:
+  - `x-experiment-name`: Name from the JSON file.
+  - `x-user-id`: Stable identifier (email, UUID, etc.) to keep assignments sticky.
+3. Responses echo `experiment` and `variant` so you can fan out telemetry or UI logic per cohort.
+4. Variant caches are isolated—repeat the same headers when calling `/cache/stats` if you want variant-specific hit rates.
+
+### Multilingual Answers
+- Questions + conversation history are auto-detected with langdetect, translated to English for retrieval, then translated back.
+- The response includes `language` so front-ends can localize UI chrome.
+- Disable translation with `EKC_MULTILINGUAL=false` if you only operate in English or want to avoid the optional dependencies.
+- Chunk metadata (`metadata.language`) is now populated, enabling language-filtered analytics.
 
 ### Python Configuration
 
